@@ -8,8 +8,8 @@ interface MailOptions {
 }
 
 export async function sendEmail({ to, subject, text }: MailOptions): Promise<void> {
-  if (env.NODE_ENV !== "production") {
-    // Print OTP directly to terminal — no Resend call needed in dev
+  if (!env.RESEND_API_KEY) {
+    // No API key — log to terminal (local dev without Resend configured)
     logger.info(
       { to, subject },
       `\n${"─".repeat(52)}\n📧  DEV MAIL\n${"─".repeat(52)}\nTO:      ${to}\nSUBJECT: ${subject}\n\n${text}\n${"─".repeat(52)}`,

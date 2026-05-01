@@ -73,24 +73,25 @@ export async function getCanvas(username: string, req: Request) {
   await logView(String(profile._id), req);
 
   return {
-    username: profile.username,
-    fullName: profile.fullName,
-    avatarUrl: profile.avatarUrl,
-    bio: profile.bio,
-    department: profile.department,
-    year: profile.year,
-    isVerified: !!user.studentEmailVerifiedAt,
-    accentColor: profile.accentColor,
-    completenessScore: profile.completenessScore,
-    viewCount: profile.viewCount,
-    canvasLayout: profile.canvasLayout,
-    sections: {
-      services,
-      projects,
-      links,
-      stories,
-      resume: resume ?? null,
+    profile: {
+      _id: String(profile._id),
+      username: profile.username,
+      fullName: profile.fullName,
+      avatarUrl: profile.avatarUrl,
+      bio: profile.bio,
+      department: profile.department,
+      year: profile.year,
+      isVerified: user.studentEmailVerifiedAt != null,
+      accentColor: profile.accentColor,
+      completenessScore: profile.completenessScore,
+      viewCount: profile.viewCount,
+      canvasLayout: profile.canvasLayout,
     },
+    services,
+    projects,
+    links,
+    stories,
+    resume: resume ?? null,
     contacts,
   };
 }

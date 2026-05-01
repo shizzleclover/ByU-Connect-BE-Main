@@ -31,7 +31,7 @@ export async function getFeatured() {
     { $match: { "user.isSuspended": false } },
     { $sort: { featuredOrder: 1 } },
     {
-      $addFields: { isVerified: { $ne: ["$user.studentEmailVerifiedAt", null] } },
+      $addFields: { isVerified: { $cond: [{ $ifNull: ["$user.studentEmailVerifiedAt", false] }, true, false] } },
     },
     {
       $project: {
@@ -99,7 +99,7 @@ export async function discover(params: {
   }
 
   pipeline.push({
-    $addFields: { isVerified: { $ne: ["$user.studentEmailVerifiedAt", null] } },
+    $addFields: { isVerified: { $cond: [{ $ifNull: ["$user.studentEmailVerifiedAt", false] }, true, false] } },
   });
 
   const sortStage: Record<string, 1 | -1 | { $meta: "textScore" }> = q

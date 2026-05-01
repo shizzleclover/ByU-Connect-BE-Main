@@ -7,7 +7,7 @@ import { validate } from "../../middleware/validate.middleware";
 
 const signSchema = z.object({
   body: z.object({
-    type: z.enum(["cover", "gallery", "link_icon"]),
+    type: z.enum(["cover", "gallery", "avatar", "story"]),
     resourceId: z.string().optional(),
   }),
 });
