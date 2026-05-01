@@ -6,13 +6,15 @@ export function normalizeContact(type: string, value: string): string {
   switch (type) {
     case "whatsapp":
     case "phone": {
-      if (!/^\+\d{7,15}$/.test(v)) {
+      // Strip common formatting characters, keep only + and digits
+      const stripped = v.replace(/[\s\-().]/g, "");
+      if (!/^\+\d{7,15}$/.test(stripped)) {
         throw new ApiError(
           400,
-          `${type} must be in E.164 format (e.g. +2348012345678)`,
+          `${type} must include country code (e.g. +2348012345678)`,
         );
       }
-      return v;
+      return stripped;
     }
 
     case "email": {
