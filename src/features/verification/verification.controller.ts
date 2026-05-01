@@ -7,6 +7,7 @@ import { sendEmail } from "../../lib/mailer";
 import { ApiError } from "../../lib/apiError";
 import { recomputeCompleteness } from "../../lib/completeness";
 import { Profile } from "../profile/profile.model";
+import { env } from "../../config/env";
 
 export const startStudentVerification = async (req: Request, res: Response) => {
   const { studentEmail } = req.body;
