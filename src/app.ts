@@ -4,7 +4,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
+import swaggerUi from "swagger-ui-express";
 import { logger } from "./lib/logger";
+import { swaggerSpec } from "./config/swagger";
 
 // Routers
 import { authRouter } from "./features/auth/auth.routes";
@@ -54,6 +56,10 @@ app.use(
     legacyHeaders: false,
   }),
 );
+
+// API docs
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/api/docs.json", (_req: Request, res: Response) => res.json(swaggerSpec));
 
 // Health check
 app.get("/api/health", (_req: Request, res: Response) => {

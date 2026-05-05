@@ -15,6 +15,8 @@ export interface IUser extends Document {
   isSuspended: boolean;
   suspendedReason: string | null;
 
+  needsPasswordReset: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 
@@ -47,6 +49,8 @@ const userSchema = new Schema<IUser>(
 
     isSuspended: { type: Boolean, default: false },
     suspendedReason: { type: String, default: null },
+
+    needsPasswordReset: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
