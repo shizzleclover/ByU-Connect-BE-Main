@@ -45,7 +45,7 @@ export async function getCanvas(username: string, req: Request) {
   if (!profile) throw new ApiError(404, "Canvas not found");
 
   const user = await User.findById(profile.userId).lean();
-  if (!user || user.isSuspended || !profile.isPublic) {
+  if (!user || user.isSuspended || user.role === "admin" || !profile.isPublic) {
     throw new ApiError(404, "Canvas not found");
   }
 
@@ -101,7 +101,7 @@ export async function getProject(username: string, slug: string, req: Request) {
   if (!profile) throw new ApiError(404, "Not found");
 
   const user = await User.findById(profile.userId).lean();
-  if (!user || user.isSuspended || !profile.isPublic) throw new ApiError(404, "Not found");
+  if (!user || user.isSuspended || user.role === "admin" || !profile.isPublic) throw new ApiError(404, "Not found");
 
   const project = await Project.findOne({
     profileId: profile._id,
@@ -121,7 +121,7 @@ export async function getStory(username: string, slug: string, req: Request) {
   if (!profile) throw new ApiError(404, "Not found");
 
   const user = await User.findById(profile.userId).lean();
-  if (!user || user.isSuspended || !profile.isPublic) throw new ApiError(404, "Not found");
+  if (!user || user.isSuspended || user.role === "admin" || !profile.isPublic) throw new ApiError(404, "Not found");
 
   const story = await Story.findOne({
     profileId: profile._id,

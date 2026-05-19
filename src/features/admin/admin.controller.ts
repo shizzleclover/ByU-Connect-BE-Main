@@ -62,10 +62,30 @@ export const getReports = async (req: Request, res: Response) => {
   const status = ((req.query.status as string) ?? "pending") as ReportStatus;
   const reports = await Report.find({ status })
     .sort({ createdAt: -1 })
-    .populate("reporterId", "email username")
+    .populate("reporterId", "email") // User model only has email
     .populate("targetProfileId", "username fullName")
     .lean();
-  res.status(200).json({ success: true, data: reports });
+
+  // Map the populated Mongoose documents to the shape the frontend expects
+  const formattedReports = await Promise.all(reports.map(async (report) => {
+    // Look up reporter's username from their Profile
+    const reporterUser = report.reporterId as any;
+    let reporterUsername: string | undefined;
+    if (reporterUser?._id) {
+       const reporterProfile = await Profile.findOne({ userId: reporterUser._id }).select("username").lean();
+       reporterUsername = reporterProfile?.username;
+    }
+
+    return {
+      ...report,
+      reporterId: reporterUser?._id ?? report.reporterId,
+      reporterUsername,
+      targetProfileId: (report.targetProfileId as any)?._id ?? report.targetProfileId,
+      targetProfile: typeof report.targetProfileId === 'object' ? report.targetProfileId : undefined,
+    };
+  }));
+
+  res.status(200).json({ success: true, data: formattedReports });
 };
 
 /**
@@ -137,7 +157,15 @@ export const getFeaturedList = async (_req: Request, res: Response) => {
     .sort({ featuredOrder: 1 })
     .select("username fullName avatarUrl featuredOrder userId")
     .lean();
-  res.status(200).json({ success: true, data: profiles });
+  const formattedProfiles = profiles.map((p) => ({
+    _id: p._id,
+    userId: p.userId,
+    username: p.username,
+    fullName: p.fullName,
+    avatarUrl: p.avatarUrl,
+    order: p.featuredOrder ?? 0,
+  }));
+  res.status(200).json({ success: true, data: formattedProfiles });
 };
 
 /**
@@ -307,6 +335,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
   const data = users.map((u) => ({
     ...u,
+    isVerified: !!u.studentEmailVerifiedAt,
     ...(profileMap.get(String(u._id)) ?? {}),
   }));
 

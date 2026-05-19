@@ -28,7 +28,7 @@ export async function getFeatured() {
       },
     },
     { $unwind: "$user" },
-    { $match: { "user.isSuspended": false } },
+    { $match: { "user.isSuspended": false, "user.role": { $ne: "admin" } } },
     { $sort: { featuredOrder: 1 } },
     {
       $addFields: { isVerified: { $cond: [{ $ifNull: ["$user.studentEmailVerifiedAt", false] }, true, false] } },
@@ -78,7 +78,7 @@ export async function discover(params: {
       },
     },
     { $unwind: "$user" },
-    { $match: { isPublic: true, "user.isSuspended": false } },
+    { $match: { isPublic: true, "user.isSuspended": false, "user.role": { $ne: "admin" } } },
   );
 
   if (verified === "true") {
