@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import crypto from "crypto";
 import * as XLSX from "xlsx";
 import { Report, ReportStatus } from "../moderation/report.model";
@@ -200,13 +201,29 @@ export const getFeaturedList = async (_req: Request, res: Response) => {
 export const addFeatured = async (req: Request, res: Response) => {
   const { userId, order } = req.body;
 
-  const profile = await Profile.findOneAndUpdate(
-    { userId },
+  let profile = await Profile.findOneAndUpdate(
+    { userId: new mongoose.Types.ObjectId(userId) },
     { isFeatured: true, featuredAt: new Date(), featuredOrder: order ?? 0 },
-    { new: true },
+    { returnDocument: "after" },
   );
 
-  if (!profile) throw new ApiError(404, "Profile not found");
+  if (!profile) {
+    // Look up user to see if they exist
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, "User not found");
+
+    // Auto-initialize profile for featuring if not exists
+    const baseUsername = user.email.split("@")[0].replace(/[^a-z0-9]/gi, "").toLowerCase();
+    profile = await Profile.create({
+      userId: user._id,
+      username: baseUsername + Math.floor(1000 + Math.random() * 9000),
+      fullName: user.email.split("@")[0],
+      isFeatured: true,
+      featuredAt: new Date(),
+      featuredOrder: order ?? 0,
+    });
+  }
+
   res.status(200).json({ success: true, data: profile });
 };
 
@@ -230,7 +247,7 @@ export const addFeatured = async (req: Request, res: Response) => {
  */
 export const removeFeatured = async (req: Request, res: Response) => {
   await Profile.findOneAndUpdate(
-    { userId: String(req.params["userId"]) },
+    { userId: new mongoose.Types.ObjectId(String(req.params["userId"])) },
     { isFeatured: false, featuredAt: null, featuredOrder: null },
   );
   res.status(200).json({ success: true, data: null });
