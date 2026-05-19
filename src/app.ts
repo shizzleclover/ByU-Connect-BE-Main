@@ -33,7 +33,31 @@ import { notFoundHandler } from "./middleware/notFound.middleware";
 
 const app = express();
 
-app.use(pinoHttp({ logger }));
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: {
+      ignore: (req) => {
+        const url = req.url || "";
+        return (
+          url.includes("/health") ||
+          url.includes("/docs") ||
+          url.includes("/favicon.ico")
+        );
+      },
+    },
+    customSuccessMessage: (req, res, responseTime) => {
+      return `[HTTP] ${req.method} ${req.url} ${res.statusCode} (${responseTime}ms)`;
+    },
+    customErrorMessage: (req, res, err) => {
+      return `[HTTP] ERROR ${req.method} ${req.url} ${res.statusCode} - ${err.message}`;
+    },
+    serializers: {
+      req: (req) => ({ method: req.method, url: req.url }),
+      res: (res) => ({ statusCode: res.statusCode }),
+    },
+  })
+);
 app.use(helmet());
 app.use(
   cors({

@@ -331,7 +331,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
   const ids = users.map((u) => String(u._id));
   const profiles = await Profile.find({ userId: { $in: ids } })
-    .select("userId username fullName avatarUrl department year")
+    .select("userId username fullName avatarUrl department year isFeatured")
     .lean();
 
   const profileMap = new Map(profiles.map((p) => [String(p.userId), p]));
