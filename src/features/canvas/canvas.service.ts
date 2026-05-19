@@ -82,6 +82,7 @@ export async function getCanvas(username: string, req: Request) {
       department: profile.department,
       year: profile.year,
       isVerified: user.studentEmailVerifiedAt != null,
+      isFeatured: !!profile.isFeatured,
       accentColor: profile.accentColor,
       completenessScore: profile.completenessScore,
       viewCount: profile.viewCount,
