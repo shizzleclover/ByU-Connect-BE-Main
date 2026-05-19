@@ -353,11 +353,15 @@ export const getUsers = async (req: Request, res: Response) => {
 
   const profileMap = new Map(profiles.map((p) => [String(p.userId), p]));
 
-  const data = users.map((u) => ({
-    ...u,
-    isVerified: !!u.studentEmailVerifiedAt,
-    ...(profileMap.get(String(u._id)) ?? {}),
-  }));
+  const data = users.map((u) => {
+    const profile = profileMap.get(String(u._id)) ?? {};
+    return {
+      ...u,
+      ...profile,
+      _id: String(u._id),
+      isVerified: !!u.studentEmailVerifiedAt,
+    };
+  });
 
   res.status(200).json({ success: true, data });
 };
