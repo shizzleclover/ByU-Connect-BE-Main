@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import * as XLSX from "xlsx";
 import { Report, ReportStatus } from "../moderation/report.model";
 import { Profile } from "../profile/profile.model";
 import { User } from "../../models/user.model";
+import { Otp } from "../verification/otp.model";
 import { ApiError } from "../../lib/apiError";
 import { hash } from "../../lib/password";
 import { sendEmail } from "../../lib/mailer";
 import { welcomeEmail } from "../../lib/emailTemplates";
+import { env } from "../../config/env";
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
@@ -508,8 +511,8 @@ export const bulkImport = async (req: Request, res: Response) => {
       continue;
     }
 
-    const tempPassword = generatePassword();
-    const passwordHash = await hash(tempPassword);
+    const dummyPassword = crypto.randomUUID();
+    const passwordHash = await hash(dummyPassword);
 
     let username = (row.username ?? "").toString().trim().toLowerCase();
     if (!username) username = toUsername(fullName, email);
@@ -534,7 +537,21 @@ export const bulkImport = async (req: Request, res: Response) => {
         year,
       });
 
-      const template = welcomeEmail({ fullName, username, email, temporaryPassword: tempPassword });
+      // Generate a 6-digit activation code (OTP) valid for 7 days
+      const code = crypto.randomInt(100000, 999999).toString();
+      const codeHash = await hash(code);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      await Otp.create({
+        userId: user._id,
+        purpose: "reset_password",
+        emailTarget: email,
+        codeHash,
+        expiresAt,
+      });
+
+      const setupUrl = `${env.WEB_URL}/reset-password?email=${encodeURIComponent(email)}&code=${code}`;
+      const template = welcomeEmail({ fullName, username, email, setupUrl });
       await sendEmail({ to: email, ...template }).catch(() => {
         // Non-fatal — log but don't fail the import
       });

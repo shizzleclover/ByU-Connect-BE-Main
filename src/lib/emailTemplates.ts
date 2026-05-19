@@ -6,10 +6,9 @@ export function welcomeEmail(data: {
   fullName: string;
   username: string;
   email: string;
-  temporaryPassword: string;
+  setupUrl: string;
 }): { subject: string; text: string; html: string } {
-  const subject = "Welcome to ByU Connect — Your account is ready";
-  const signinUrl = `${WEB_URL}/signin`;
+  const subject = "Welcome to ByU Connect — Activate your canvas";
   const canvasUrl = `${WEB_URL}/${data.username}`;
 
   const text = `
@@ -17,11 +16,8 @@ Hi ${data.fullName},
 
 Welcome to ByU Connect! Your account has been created.
 
-Sign in at: ${signinUrl}
-Email: ${data.email}
-Temporary password: ${data.temporaryPassword}
-
-You'll be prompted to change your password after your first sign-in.
+To activate your account and set up your password, please visit the link below:
+${data.setupUrl}
 
 Your canvas is live at: ${canvasUrl}
 
@@ -57,42 +53,26 @@ The ByU Connect Team
                 Welcome, ${data.fullName}.
               </h1>
               <p style="margin:0 0 28px;font-size:14px;color:#6B6B67;line-height:1.6;">
-                Your ByU Connect account is live. Here are your sign-in details.
+                Your ByU Connect account is ready! To get started, you'll need to choose a password to activate your account.
               </p>
-
-              <!-- Credentials box -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F4F1;border-left:3px solid #0F0F0E;margin-bottom:28px;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#6B6B67;">YOUR CREDENTIALS</p>
-                    <p style="margin:0 0 6px;font-size:13px;color:#0F0F0E;">
-                      <span style="color:#6B6B67;">Email:</span>&nbsp; ${data.email}
-                    </p>
-                    <p style="margin:0;font-size:13px;color:#0F0F0E;">
-                      <span style="color:#6B6B67;">Temporary password:</span>&nbsp;
-                      <strong style="font-size:16px;letter-spacing:0.05em;">${data.temporaryPassword}</strong>
-                    </p>
-                  </td>
-                </tr>
-              </table>
 
               <!-- CTA -->
               <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 <tr>
                   <td style="background:#0F0F0E;">
-                    <a href="${signinUrl}"
+                    <a href="${data.setupUrl}"
                        style="display:inline-block;padding:14px 32px;font-size:11px;font-weight:700;letter-spacing:0.12em;color:#FAFAF7;text-decoration:none;">
-                      SIGN IN NOW →
+                      ACTIVATE ACCOUNT & SET PASSWORD →
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0 0 6px;font-size:13px;color:#6B6B67;line-height:1.6;">
-                You'll be asked to set a new password on your first login.
+              <p style="margin:0 0 12px;font-size:13px;color:#6B6B67;line-height:1.6;">
+                Once you've set your password, you will be able to sign in and finish customizing your student canvas!
               </p>
               <p style="margin:0;font-size:13px;color:#6B6B67;line-height:1.6;">
-                Your canvas is already live at
+                Your public canvas is already live at
                 <a href="${canvasUrl}" style="color:#0F0F0E;text-decoration:underline;">${canvasUrl}</a>
               </p>
             </td>
