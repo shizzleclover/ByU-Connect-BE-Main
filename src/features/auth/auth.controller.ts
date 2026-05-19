@@ -3,6 +3,15 @@ import crypto from "crypto";
 import { User } from "../../models/user.model";
 import { Profile } from "../profile/profile.model";
 import { Otp } from "../verification/otp.model";
+import { Service } from "../services/services.model";
+import { Project } from "../projects/projects.model";
+import { Story } from "../stories/stories.model";
+import { Link } from "../links/links.model";
+import { Contact } from "../contacts/contacts.model";
+import { Resume } from "../resume/resume.model";
+import { SavedProfile } from "../saved/saved.model";
+import { ProfileView } from "../analytics/profileView.model";
+import { OutreachClick } from "../analytics/outreachClick.model";
 import { AuthService } from "./auth.service";
 import { hash, verify } from "../../lib/password";
 import { verifyRefresh } from "../../lib/jwt";
@@ -10,6 +19,7 @@ import { ApiError } from "../../lib/apiError";
 import { env } from "../../config/env";
 import { sendEmail } from "../../lib/mailer";
 import { recomputeCompleteness } from "../../lib/completeness";
+import cloudinary from "../../config/cloudinary";
 
 const REFRESH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -294,4 +304,56 @@ export const resetPassword = async (req: Request, res: Response) => {
 
   res.clearCookie("refreshToken");
   res.status(200).json({ success: true, data: { message: "Password reset successfully. Please sign in." } });
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  const userId = String(req.user!._id);
+
+  const profile = await Profile.findOne({ userId }).lean();
+  if (!profile) throw new ApiError(404, "Profile not found");
+  const profileId = String(profile._id);
+
+  // Collect Cloudinary publicIds for cleanup
+  const publicIds: string[] = [];
+  if (profile.avatarPublicId) publicIds.push(profile.avatarPublicId);
+
+  const projects = await Project.find({ profileId }).select("coverPublicId gallery").lean();
+  for (const proj of projects) {
+    if (proj.coverPublicId) publicIds.push(proj.coverPublicId);
+    for (const item of proj.gallery ?? []) {
+      if (item.publicId) publicIds.push(item.publicId);
+    }
+  }
+
+  const stories = await Story.find({ profileId }).select("coverPublicId").lean();
+  for (const s of stories) {
+    if (s.coverPublicId) publicIds.push(s.coverPublicId);
+  }
+
+  const resume = await Resume.findOne({ profileId }).lean();
+  if (resume?.publicId) publicIds.push(resume.publicId);
+
+  // Delete Cloudinary assets (best-effort, don't block on failure)
+  await Promise.allSettled(
+    publicIds.map((id) => cloudinary.uploader.destroy(id).catch(() => {})),
+  );
+
+  // Cascade delete all user data
+  await Promise.all([
+    Service.deleteMany({ profileId }),
+    Project.deleteMany({ profileId }),
+    Story.deleteMany({ profileId }),
+    Link.deleteMany({ profileId }),
+    Contact.deleteMany({ profileId }),
+    Resume.deleteOne({ profileId }),
+    SavedProfile.deleteMany({ $or: [{ userId }, { profileId }] }),
+    ProfileView.deleteMany({ profileId }),
+    OutreachClick.deleteMany({ profileId }),
+    Otp.deleteMany({ userId }),
+    Profile.deleteOne({ _id: profileId }),
+    User.deleteOne({ _id: userId }),
+  ]);
+
+  res.clearCookie("refreshToken");
+  res.status(200).json({ success: true, data: { message: "Account deleted." } });
 };

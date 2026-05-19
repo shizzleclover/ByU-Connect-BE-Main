@@ -168,3 +168,4 @@ authRouter.post("/verify-email", validate(verifyEmailSchema), asyncHandler(authC
 authRouter.post("/resend-verification", rateLimits.otpSend, validate(resendVerificationSchema), asyncHandler(authController.resendVerification));
 authRouter.post("/forgot-password", rateLimits.otpSend, validate(forgotPasswordSchema), asyncHandler(authController.forgotPassword));
 authRouter.post("/reset-password", validate(resetPasswordSchema), asyncHandler(authController.resetPassword));
+authRouter.delete("/account", requireAuth, asyncHandler(authController.deleteAccount));
